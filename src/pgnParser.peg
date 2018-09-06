@@ -7,7 +7,14 @@ pgn
 
 headers
     = tagPairs: tagPair*
-        { return tagPairs; }
+        {
+            var headers = {};
+            for(var i = 0; i < tagPairs.length; i++) {
+                var tagPair = tagPairs[i];
+                headers[tagPair.key] = tagPair.value;
+            }
+            return headers;
+        }
 
 tagPair
     = whiteSpace? "[" key: tagKey value: tagValue "]" [" \t"]* lineBreak

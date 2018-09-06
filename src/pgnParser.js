@@ -142,7 +142,14 @@ function peg$parse(input, options) {
       peg$startRuleFunction  = peg$parsepgn,
 
       peg$c0 = function(headers, game) { return { headers: headers, game: game }; },
-      peg$c1 = function(tagPairs) { return tagPairs; },
+      peg$c1 = function(tagPairs) {
+                  var headers = {};
+                  for(var i = 0; i < tagPairs.length; i++) {
+                      var tagPair = tagPairs[i];
+                      headers[tagPair.key] = tagPair.value;
+                  }
+                  return headers;
+              },
       peg$c2 = "[",
       peg$c3 = peg$literalExpectation("[", false),
       peg$c4 = "]",

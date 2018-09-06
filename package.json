@@ -5,8 +5,8 @@
   "description": "",
   "main": "src/pgnParser.js",
   "scripts": {
-    "test": "mocha",
-    "peg": "pegjs ./src/pgnParser.peg"
+    "build": "pegjs ./src/pgnParser.peg",
+    "test": "mocha"
   },
   "keywords": [],
   "author": "",

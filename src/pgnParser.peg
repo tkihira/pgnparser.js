@@ -24,7 +24,201 @@ tagValue
 // GAMES
 
 game
-    =a:.* { return a.join(""); }
+    = first: startWhite moves: black?
+        { moves = moves || []; return first.concat(moves); }
+    / first: startBlack moves: white?
+        { moves = moves || []; return first.concat(moves); }
+    / whiteSpace?
+        { return []; }
+
+startWhite
+    = moves: white { return moves; }
+
+startBlack
+    = moves: black { return moves; }
+
+white
+    = whiteSpace? cb: comments? whiteSpace?
+      mn: moveNumber? whiteSpace? cm: comments? whiteSpace?
+      hm: halfMove whiteSpace? nag: nags? whiteSpace? ca: comments? whiteSpace?
+      vari: variationWhite?
+      moves: black?
+        {
+            moves = moves || [];
+            var move = {
+                turn: 'w',
+                moveNumber: mn,
+                notation: hm,
+                nag: nag,
+                commentBefore: cb,
+                commentAfter: ca,
+                commentMove: cm,
+                variations: vari,
+            };
+            moves.unshift(move);
+            return moves;
+        }
+    / endGame: endGame { return [{ result: endGame }]; }
+
+black
+    = whiteSpace? cb: comments? whiteSpace?
+      me: moveEllipse? whiteSpace? cm: comments? whiteSpace?
+      hm: halfMove whiteSpace? nag: nags? whiteSpace? ca: comments? whiteSpace?
+      vari: variationBlack?
+      moves: white?
+        {
+            moves = moves || [];
+            var move = {
+                turn: 'b',
+                moveNumber: me,
+                notation: hm,
+                nag: nag,
+                commentBefore: cb,
+                commentAfter: ca,
+                commentMove: cm,
+                variations: vari,
+            };
+            moves.unshift(move);
+            return moves;
+        }
+    / endGame: endGame { return [{ result: endGame }]; }
+
+endGame
+    = "1:0" whiteSpace? { return "1:0"; }
+    / "0:1" whiteSpace? { return "0:1"; }
+    / "1-0" whiteSpace? { return "1-0"; }
+    / "0-1" whiteSpace? { return "0-1"; }
+    / "1/2-1/2" whiteSpace? { return "1/2-1/2"; }
+    / "*" whiteSpace? { return "*"; }
+
+comments
+    = cf:comment cfl:(whiteSpace? comment)* 
+        {
+            var comment = cf;
+            for (var i = 0; i < cfl.length; i++) {
+                comment += " " + cfl[i][1];
+            }
+            return comment;
+        }
+
+comment
+    = cl cm:[^}]* cr
+        { return cm.join("").trim(); }
+
+cl = '{'
+
+cr = '}'
+
+bl = '['
+
+br = ']'
+
+variationWhite
+    = pl variation: white pr whiteSpace?
+      moves: variationWhite? whiteSpace? moveEllipse?
+        { moves = moves || []; return variation.concat(moves); }
+
+variationBlack
+    = pl variation: startBlack pr whiteSpace?
+      moves: variationBlack?
+        { moves = moves || []; return variation.concat(moves); }
+
+pl = '('
+
+pr = ')'
+
+moveNumber
+    = num: integer "."? { return num; }
+
+integer
+    = digits: [0-9]+ { return +(digits.join("")); }
+
+halfMove
+    = fig: figure? & checkdisc disc:discriminator str:strike?
+      col: column row: row pr: promotion? ch: check?
+        {
+            var hm = {};
+            hm.fig = (fig ? fig : null);
+            hm.disc =  (disc ? disc : null);
+            hm.strike = (str ? str : null);
+            hm.col = col;
+            hm.row = row;
+            hm.check = (ch ? ch : null);
+            hm.promotion = pr;
+            hm.notation = (fig ? fig : "") + (disc ? disc : "") + (str ? str : "") + col + row + (pr ? pr : "") + (ch ? ch : "");
+            return hm;
+        }
+  / fig:figure? cols:column rows:row str:strikeOrDash? col:column row:row pr:promotion? ch:check?
+    { var hm = {}; hm.fig = (fig ? fig : null); hm.strike = (str =='x' ? str : null); hm.col = col; hm.row = row; hm.check = (ch ? ch : null); hm.notation = (fig && (fig!=='P') ? fig : "") + cols + rows + (str=='x' ? str : "-") + col  + row + (pr ? pr : "") + (ch ? ch : ""); hm.promotion = pr; return hm; }
+  / fig:figure? str:strike? col:column row:row pr:promotion? ch:check?
+    { var hm = {}; hm.fig = (fig ? fig : null); hm.strike = (str ? str : null); hm.col = col; hm.row = row; hm.check = (ch ? ch : null); hm.notation = (fig ? fig : "") + (str ? str : "") + col  + row + (pr ? pr : "") + (ch ? ch : ""); hm.promotion = pr; return hm; }
+  / 'O-O-O' ch:check? { var hm = {}; hm.notation = 'O-O-O'+ (ch ? ch : ""); hm.check = (ch ? ch : null); return  hm; }
+  / 'O-O' ch:check? { var hm = {}; hm.notation = 'O-O'+ (ch ? ch : ""); hm.check = (ch ? ch : null); return  hm; }
+
+check
+  = ch:(! '+-' '+') { return ch[1]; }
+  / ch:(! '$$$' '#') { return ch[1]; }
+
+promotion
+  = '=' f:figure { return '=' + f; }
+
+nags
+  = nag:nag whiteSpace? nags:nags? { var arr = (nags ? nags : []); arr.unshift(nag); return arr; }
+
+nag
+  = '$' num:integer { return '$' + num; }
+  / '!!' { return '$3'; }
+  / '??' { return '$4'; }
+  / '!?' { return '$5'; }
+  / '?!' { return '$6'; }
+  / '!' { return '$1'; }
+  / '?' { return '$2'; }
+  / '‼' { return '$3'; }
+  / '⁇' { return '$4'; }
+  / '⁉' { return '$5'; }
+  / '⁈' { return '$6'; }
+  / '□' { return '$7'; }
+  / '=' { return '$10'; }
+  / '∞' { return '$13'; }
+  / '⩲' { return '$14'; }
+  / '⩱' { return '$15';}
+  / '±' { return '$16';}
+  / '∓' { return '$17';}
+  / '+-' { return '$18';}
+  / '-+' { return '$19';}
+  / '⨀' { return '$22'; }
+  / '⟳' { return '$32'; }
+  / '→' { return '$36'; }
+  / '↑' { return '$40'; }
+  / '⇆' { return '$132'; }
+  / 'D' { return '$220'; }
+
+discriminator
+  = column
+  / row
+
+
+checkdisc
+  = discriminator strike? column row
+
+moveEllipse
+  = num:integer"."+ { return num; }
+
+figure
+  = [RNBQKP]
+
+column
+  = [a-h]
+
+row
+  = [1-8]
+
+strike
+  = 'x'
+
+strikeOrDash
+  = 'x'
+  / '-'
 
 // WHITESPACES
 

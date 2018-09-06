@@ -58,7 +58,7 @@ white
             moves.unshift(move);
             return moves;
         }
-    / endGame: endGame { return [{ result: endGame }]; }
+    / whiteSpace? endGame: endGame { return [{ result: endGame }]; }
 
 black
     = whiteSpace? cb: comments? whiteSpace?
@@ -81,7 +81,7 @@ black
             moves.unshift(move);
             return moves;
         }
-    / endGame: endGame { return [{ result: endGame }]; }
+    / whiteSpace? endGame: endGame { return [{ result: endGame }]; }
 
 endGame
     = "1:0" whiteSpace? { return "1:0"; }
@@ -180,10 +180,10 @@ nag
   / '□' { return '$7'; }
   / '=' { return '$10'; }
   / '∞' { return '$13'; }
-  / '⩲' { return '$14'; }
-  / '⩱' { return '$15';}
-  / '±' { return '$16';}
-  / '∓' { return '$17';}
+  / ('⩲' / '+/=') { return '$14'; }
+  / ('⩱' / '=/+') { return '$15';}
+  / ('+/-' / '±') { return '$16';}
+  / ('-/+' / '∓' ) { return '$17';}
   / '+-' { return '$18';}
   / '-+' { return '$19';}
   / '⨀' { return '$22'; }

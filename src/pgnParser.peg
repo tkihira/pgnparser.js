@@ -1,0 +1,38 @@
+
+pgn
+    = headers:headers game: game 
+        { return { headers: headers, game: game }; }
+
+// HEADERS
+
+headers
+    = tagPairs: tagPair*
+        { return tagPairs; }
+
+tagPair
+    = whiteSpace? "[" key: tagKey value: tagValue "]" [" \t"]* lineBreak
+        { return { key: key, value: value }; }
+
+tagKey
+    = whiteSpace? key: [^" \t"]+ [" \t"]
+        { return key.join(""); }
+
+tagValue
+    = "\"" value: [^\"]* "\"" whiteSpace?
+        { return value.join(""); }
+
+// GAMES
+
+game
+    =a:.* { return a.join(""); }
+
+// WHITESPACES
+
+whiteSpace
+    = [" \t\n"]+ { return ""; }
+
+lineBreak
+    = "\n" / EOF { return "\n"; }
+
+EOF
+    = !.
